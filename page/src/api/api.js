@@ -98,6 +98,34 @@ function operateUsers(para) {
     return axios({ ...params })
 }
 
+function getMenuList(para) {
+    let params = {}
+    let method = 'GET'
+    params.url = '/menu/list'
+    params.method = method
+    if (method === 'POST') {
+        params.data = para
+    } else {
+        params.params = para
+    }
+
+    return axios({ ...params })
+}
+
+function operateMenu(para) {
+    let params = {}
+    let method = 'POST'
+    params.url = '/menu/operate'
+    params.method = method
+    if (method === 'POST') {
+        params.data = para
+    } else {
+        params.params = para
+    }
+
+    return axios({ ...params })
+}
+
 export default {
     login,
     getPermissionList,
@@ -105,5 +133,7 @@ export default {
     delUsersInfo,
     getRolesList,
     getDeptList,
-    operateUsers
+    operateUsers,
+    getMenuList,
+    operateMenu
 }

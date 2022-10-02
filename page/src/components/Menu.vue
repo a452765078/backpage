@@ -5,8 +5,7 @@
         <el-menu  
         class="el-menu-vertical-demo" 
         router
-        @open="handleOpen"
-        @close="handleClose"
+
         >
         <tree-menu-vue :menuList="menuList"></tree-menu-vue>
 </el-menu>
