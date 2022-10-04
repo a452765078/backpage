@@ -59,7 +59,7 @@ function delUsersInfo(para) {
 function getRolesList(para) {
     let params = {}
     let method = 'GET'
-    params.url = '/roles/list'
+    params.url = '/roles/allList'
     params.method = method
     if (method === 'POST') {
         params.data = para
@@ -126,6 +126,48 @@ function operateMenu(para) {
     return axios({ ...params })
 }
 
+function getRolesListByPage(para) {
+    let params = {}
+    let method = 'GET'
+    params.url = '/roles/list'
+    params.method = method
+    if (method === 'POST') {
+        params.data = para
+    } else {
+        params.params = para
+    }
+
+    return axios({ ...params })
+}
+
+function operateRole(para) {
+    let params = {}
+    let method = 'POST'
+    params.url = '/roles/operate'
+    params.method = method
+    if (method === 'POST') {
+        params.data = para
+    } else {
+        params.params = para
+    }
+
+    return axios({ ...params })
+}
+
+function updateRolePermission(para) {
+    let params = {}
+    let method = 'POST'
+    params.url = '/roles/update/permission'
+    params.method = method
+    if (method === 'POST') {
+        params.data = para
+    } else {
+        params.params = para
+    }
+
+    return axios({ ...params })
+}
+
 export default {
     login,
     getPermissionList,
@@ -135,5 +177,8 @@ export default {
     getDeptList,
     operateUsers,
     getMenuList,
-    operateMenu
+    operateMenu,
+    getRolesListByPage,
+    operateRole,
+    updateRolePermission
 }

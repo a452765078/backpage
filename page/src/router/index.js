@@ -19,6 +19,10 @@ const routes = [
         path: '/system/menu',
         name: 'menu',
         component: () => import('../views/menu.vue')
+    }, {
+        path: '/system/role',
+        name: 'role',
+        component: () => import('../views/role.vue')
     }
 ]
 
