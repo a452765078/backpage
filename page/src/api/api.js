@@ -167,6 +167,19 @@ function updateRolePermission(para) {
 
     return axios({ ...params })
 }
+function operateDept(para) {
+    let params = {}
+    let method = 'POST'
+    params.url = '/dept/operate'
+    params.method = method
+    if (method === 'POST') {
+        params.data = para
+    } else {
+        params.params = para
+    }
+
+    return axios({ ...params })
+}
 
 function getLeaveList(para) {
     let params = {}
@@ -223,6 +236,7 @@ export default {
     getRolesListByPage,
     operateRole,
     updateRolePermission,
+    operateDept,
     getLeaveList,
     operateLeave,
     operateApprove

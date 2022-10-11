@@ -1,0 +1,281 @@
+<template>
+    <div class="dept">
+        <div class="formOperate">
+            <div class="box">
+                <div class="inner">
+                    <el-form :inline="true" :model="deptForm" ref="deptForm">
+                        <el-form-item label="部门名称" prop="deptName">
+                            <el-input v-model="deptForm.deptName"></el-input>
+                        </el-form-item>
+                        <el-button type="primary" @click="getDeptList">查询</el-button>
+                        <el-button type="primary" @click="formReset('deptForm')">重置</el-button>
+                    </el-form>
+                </div>
+            </div>
+            </div>
+        <div class="tableOperate">
+            <div class="box">
+                <div class="top">
+                    <el-button type="primary" @click="openDialog('create')">新增</el-button>
+                </div>
+                <div class="inner">
+                    <el-table :data="tableData" 
+                    ref="tableDom" 
+                    row-key="_id" 
+                    :tree-props="{ children: 'children'}"
+                   >
+                        <el-table-column v-for="(column,index) in deptInfoList" :label="column.label"  :prop="column.prop" :key="index"></el-table-column>
+                        <el-table-column label="操作">
+                            <template #default="scope">
+                                <el-button size="small" @click="openDialog('edit',scope.row)"
+                                >编辑</el-button
+                                >
+                                <el-button
+                                size="small"
+                                type="danger"
+                                @click="delDept('single',scope.row._id)"
+                                >删除</el-button
+                                >
+                            </template>
+                        </el-table-column>
+                    </el-table>
+            
+                </div>
+            </div>
+        </div>
+        <!-- start -->
+        <el-dialog
+            v-model="dialogVisible"
+            title="用户操作"
+            width="40%"
+            :before-close="handleClose">
+            <el-form :inline="false" :model="deptModel" ref="deptModel" label-width="100px" :rules="rules">
+                <el-form-item label="上级部门" prop="parentId">
+                    <el-cascader :options="tableData" :props="{
+                        checkStrictly: true, value: '_id', label: 'deptName' 
+                    }" 
+                    v-model="deptModel.parentId"
+                    />
+                </el-form-item>
+                <el-form-item label="部门名称" prop="deptName">
+                    <el-input v-model="deptModel.deptName" class="ml-4" size="'small">
+                      </el-input>
+                </el-form-item>
+                <el-form-item label="部门负责人" prop="userName">
+                    <el-select v-model="deptModel.userInfo" class="m-2" placeholder="Select" size="small" @change="userNameChange()">
+                        <el-option
+                          v-for="item in userNameOptions"
+                          :key="item.userId"
+                          :label="item.userInfo.split('/')[0]"
+                          :value="item.userInfo"
+                        />
+                      </el-select>
+                </el-form-item>
+                <el-form-item label="负责人邮箱" prop="userEmail">
+                    <el-input v-model="deptModel.userEmail"  disabled ></el-input>
+                </el-form-item>
+            </el-form>
+                    <template #footer>
+                        <span class="dialog-footer">
+                            <el-button @click="dialogCancel">取消</el-button>
+                            <el-button type="primary" @click="dialogSubmit">确定</el-button>
+                        </span>
+                    </template>
+        </el-dialog>
+  <!-- end -->
+    </div>
+</template>
+<script>
+import pagerContent from '../utils/pager'
+import api from '../api/api'
+export default {
+    name: 'users',
+    data() {
+        return {
+            deptForm: {
+                deptName:'',
+            },
+            tableData:[],
+            pager:{
+                pageNum:1,
+                pageSize:10
+            },
+            deptInfoList: [
+                {
+                    prop:'deptName',
+                    label:'部门名称'
+                },
+                {
+                    prop:'userName',
+                    label:'负责人'
+                },
+                {
+                    prop:'userEmail',
+                    label:'负责人邮箱'
+                },
+                {
+                    prop:'updateTime',
+                    label:'更新时间'
+                },
+                {
+                    prop:'createTime',
+                    label:'创建时间'
+                },
+            ],
+            curPage:1,
+            dialogVisible: false,
+            action:'',
+            deptModel: {
+                _id:'',
+                menuName: '',
+                menuType:'',
+                menuCode:'',
+                path:'',
+                icon:'',
+                component:'',
+                parentId:[null],
+                userInfo:''
+            },
+            rules: {
+                deptName:[
+                    {required:true,message:'请输入部门名称',trigger:'blur'}
+                ],
+                userName: [
+                    {required:true,message:'请输入用户名',trigger:'blur'}
+                ],
+                userEmail: [
+                    {required:true,message:'请输入邮箱',trigger:'blur'}
+                ],
+            },
+            userNameOptions:[]
+        }
+    },
+    mounted() {
+        this.getDeptList()
+        this.getUserList()
+    },
+    methods: {
+        async getUserList() {
+            
+            let params = {
+                pageNum:this.curPage,
+                pageSize:this.pager.pageSize
+            }
+            const res = await api.getUsersList(params)
+            this.userNameOptions = res.list
+            this.formatUser()
+        },
+        formatUser() {
+            this.userNameOptions.map((item) => {
+                item.userInfo = `${item.userName}/${item.userEmail}`
+            })
+        }, 
+        userNameChange() {
+            console.log(this.deptModel.userInfo)
+            this.deptModel.userName =  this.deptModel.userInfo.split("/")[0]
+            this.deptModel.userEmail = this.deptModel.userInfo.split("/")[1]
+        },  
+        async getDeptList() {
+            
+            let params = {...this.deptForm,
+                pageNum:this.curPage,
+                pageSize:this.pager.pageSize
+            }
+            const res = await api.getDeptList(params)
+            this.tableData = res
+        },
+        formReset(val) {
+            this.$refs[val].resetFields()
+        },
+        async delDept(type,val) {
+            this.action = 'delete'
+            const res = await api.operateDept({
+                _id:val,
+                action:this.action
+            })
+        },
+        openDialog(action,row) {
+            this.action = action
+            this.dialogVisible = true
+            if(action == 'edit') {
+                console.log("row =>",row)
+                this.deptModel = row
+                this.deptModel.userInfo = `${row.userName}/${row.userEmail}`
+                this.deptModel.userName =  this.deptModel.userInfo.split("/")[0]
+                this.deptModel.userEmail = this.deptModel.userInfo.split("/")[1]
+            }
+        },
+        closeDialog() {
+            this.action = ''
+            this.dialogVisible = false
+            this.deptModel = {}
+        },
+        dialogSubmit() {
+            this.$refs['deptModel'].validate( async (valid) => {
+                console.log(valid)
+                if(valid) {
+                    let params = {
+                        ...this.deptModel,
+                        action:this.action
+                    }
+                    const res = await api.operateDept(params)
+                    if(res) {
+                        alert("操作成功")
+                        this.closeDialog()
+                    }else {
+                        alert("操作失败")
+                    }
+                }
+            })
+        },
+        dialogCancel() {
+            this.closeDialog()
+        }
+    }
+}
+</script>
+<style lang="scss">
+.dept {
+    box-sizing: border-box;
+    padding: 18px;
+    .formOperate {
+        width: 100%;
+        height: 80px;
+        line-height: 80px;
+        background: #FFFFFF;
+        display: flex;
+        align-items: center;
+        .box {
+           .inner {
+            display: flex;
+            align-items: center;
+                .el-form {
+                    .el-form-item {
+                        margin-bottom: 0;
+                        margin-left: 35px;
+                    }
+                    .el-button {
+                        margin-left: 35px;
+                    }
+                }
+           }
+        }
+    }
+    .tableOperate {
+        margin-top: 12px;
+        width: 100%;
+        min-height: 520px;
+        background: #FFFFFF;
+        .box {
+            .top {
+                padding: 22px;
+                box-sizing: border-box;
+                border-bottom: 1px solid lightgray;
+            }
+        }
+    }
+    .el-pagination {
+        padding: 15px 15px;
+    }
+}
+</style>
