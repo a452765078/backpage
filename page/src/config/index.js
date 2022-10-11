@@ -1,4 +1,5 @@
 export default {
-    mock: true,
-    env: 'dev'
+    mock: false,
+    env: 'dev',
+    storageName: 'imooc'
 }

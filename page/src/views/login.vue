@@ -13,6 +13,7 @@
 </template>
 <script>
 import { ElForm,ElFormItem,ElInput,ElButton} from 'element-plus';
+import storage from '../storage/index';
 import Api from '../api/api'
 export  default {
     name:'login',
@@ -41,12 +42,14 @@ export  default {
         login() {
             this.$refs['loginForm'].validate(async (valid)=> {
                 if(valid) {
-                    console.log(`登录：userName:${this.form.userName} userPwd:${this.form.userPwd}`)
+                    // console.log(`登录：userName:${this.form.userName} userPwd:${this.form.userPwd}`)
 
                     Api.login({
                         userName:this.form.userName,
                         userPwd:this.form.userPwd
                     }).then((res)=>{
+                        debugger
+                        storage.setAllStorage(res)
                         this.$router.push({
                             path:"/home"
                         })

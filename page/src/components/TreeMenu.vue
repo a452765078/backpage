@@ -10,7 +10,7 @@
           <tree-menu :menuList="menu.children"></tree-menu>
         </el-sub-menu>
       </template>
-      <el-menu-item  v-else-if="menu.menuType==1&&menu.component" :index="menu.component">
+      <el-menu-item  v-else-if="menu.menuType==1&&menu.component" :index="menu.path">
           <span>{{menu.menuName}}</span>
       </el-menu-item>
     </template>

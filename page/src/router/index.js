@@ -23,6 +23,16 @@ const routes = [
         path: '/system/role',
         name: 'role',
         component: () => import('../views/role.vue')
+    },
+    {
+        path: '/audit/leave',
+        name: 'leave',
+        component: () => import('../views/leave.vue')
+    },
+    {
+        path: '/audit/approve',
+        name: 'approve',
+        component: () => import('../views/approve.vue')
     }
 ]
 

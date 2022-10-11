@@ -1,7 +1,11 @@
 import axios from 'axios'
 import config from '../config/index'
+import storage from '../storage/index'
 
 axios.interceptors.request.use(function (config) {
+    // console.log("config", config)
+    let token = storage.getItem('token')
+    config.headers.authorization = `Bearer ${token}`
     return config
 }, function (err) {
     return Promise.reject(err)

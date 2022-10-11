@@ -103,7 +103,7 @@
 import pagerContent from '../utils/pager'
 import api from '../api/api'
 export default {
-    name: 'users',
+    name: 'roles',
     data() {
         return {
             that: this,

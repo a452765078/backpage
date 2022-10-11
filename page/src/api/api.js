@@ -3,7 +3,7 @@ import axios from './index.js'
 function login(para) {
     let params = {}
     let method = 'POST'
-    params.url = '/login'
+    params.url = '/users/login'
     params.method = method
     if (method === 'POST') {
         params.data = para
@@ -168,6 +168,48 @@ function updateRolePermission(para) {
     return axios({ ...params })
 }
 
+function getLeaveList(para) {
+    let params = {}
+    let method = 'GET'
+    params.url = '/leave/list'
+    params.method = method
+    if (method === 'POST') {
+        params.data = para
+    } else {
+        params.params = para
+    }
+
+    return axios({ ...params })
+}
+
+function operateLeave(para) {
+    let params = {}
+    let method = 'POST'
+    params.url = '/leave/operate'
+    params.method = method
+    if (method === 'POST') {
+        params.data = para
+    } else {
+        params.params = para
+    }
+
+    return axios({ ...params })
+}
+
+function operateApprove(para) {
+    let params = {}
+    let method = 'POST'
+    params.url = '/leave/approve'
+    params.method = method
+    if (method === 'POST') {
+        params.data = para
+    } else {
+        params.params = para
+    }
+
+    return axios({ ...params })
+}
+
 export default {
     login,
     getPermissionList,
@@ -180,5 +222,8 @@ export default {
     operateMenu,
     getRolesListByPage,
     operateRole,
-    updateRolePermission
+    updateRolePermission,
+    getLeaveList,
+    operateLeave,
+    operateApprove
 }
