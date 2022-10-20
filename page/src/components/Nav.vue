@@ -13,11 +13,13 @@
                 <el-icon><Bell /></el-icon>
             </el-badge>
             <span class="userName">{{userInfo}}</span>
+            <span class="logout" @click="logout">注销</span>
         </div>
     </div>
 </template>
 <script>
 import Api from '../api/api'
+import store from '../storage/index'
 export default {
     name: 'Nav',
     props: {
@@ -54,6 +56,11 @@ export default {
                 
             }
 
+        },
+        logout() {
+            this.$store.dispatch("userInfo","")
+            store.setAllStorage("")
+            this.$router.push("/login")
         }
     }
 }
@@ -83,6 +90,11 @@ export default {
         }
         .userName {
             margin-left: 12px;
+            margin-right: 12px;
+        }
+        .logout {
+            display: inline-block;
+            cursor: pointer;
         }
     }
 }

@@ -15,11 +15,30 @@ const app = createApp(
 //     app.component(key, component)
 // }
 
+
+
+
+
 Object.keys(ElementPlusIconsVue).forEach((key) => {
     app.component(key, ElementPlusIconsVue[key]);
 });
 
 app.use(store)
+
+// 注册一个全局自定义指令  v-has
+app.directive('has', {
+    //当绑定的元素插入到DOM中时
+    // inserted: function (el) {
+    //     console.log("inserted", el)
+    // },
+
+    mounted: function (el, bind, vnode) {
+        let actionList = bind.instance.$store.state.actionList
+        let action = bind.value
+        let isHas = actionList.includes(action)
+        if (!isHas) el.parentNode.removeChild(el)
+    }
+})
 
 app.use(ElementPlus, {
     locale: zhCn,

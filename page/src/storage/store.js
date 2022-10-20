@@ -4,7 +4,8 @@ import storage from './index'
 export default createStore({
     state: {
         userInfo: storage.getItem('userName'),
-        count: 0
+        count: 0,
+        actionList: []
     },
     mutations: {
         login(state, param) {
@@ -12,6 +13,9 @@ export default createStore({
         },
         getCount(state, param) {
             state.count = param
+        },
+        getActionList(state, param) {
+            state.actionList = param
         }
     },
     actions: {
@@ -20,6 +24,9 @@ export default createStore({
         },
         getCount(ctx, param) {
             ctx.commit('getCount', param)
+        },
+        getActionList(ctx, param) {
+            ctx.commit('getActionList', param)
         }
     }
 })

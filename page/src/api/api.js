@@ -115,7 +115,7 @@ function getMenuList(para) {
 function operateMenu(para) {
     let params = {}
     let method = 'POST'
-    params.url = '/roles/operate'
+    params.url = '/menu/operate'
     params.method = method
     if (method === 'POST') {
         params.data = para

@@ -16,7 +16,7 @@
         <div class="tableOperate">
             <div class="box">
                 <div class="top">
-                    <el-button type="primary" @click="openDialog('create')">新增</el-button>
+                    <el-button type="primary" @click="openDialog('create')" v-has="'role-create'">新增</el-button>
                 </div>
                 <div class="inner">
                     <el-table :data="tableData" 
@@ -27,19 +27,19 @@
                         <el-table-column v-for="(column,index) in menuInfoList" :label="column.label"  :prop="column.prop" :key="index" :formatter="column.formatter"></el-table-column>
                         <el-table-column label="操作" width="280px">
                             <template #default="scope">
-                                <el-button size="small" @click="openDialog('edit',scope.row)"
+                                <el-button size="small" @click="openDialog('edit',scope.row)" v-has="'role-edit'"
                                 >编辑</el-button
                                 >
                                 <el-button
                                 size="small"
                                 type="primary"
-                                @click="openConfirmDialog(scope.row._id)"
+                                @click="openConfirmDialog(scope.row._id)" v-has="'role-delete'"
                                 >删除</el-button
                                 >
                                 <el-button
                                 size="small"
                                 type="danger"
-                                @click="openDialogPermission(scope.row)"
+                                @click="openDialogPermission(scope.row)" v-has="'role-setPermission'"
                                 >设置权限</el-button
                                 >
                             </template>
@@ -301,7 +301,7 @@ export default {
                         action:this.action
                     }
                     try {
-                        const res = await api.operateMenu(params)
+                        const res = await api.operateRole(params)
                         alert("操作成功")
                         this.getRoleList()
                         this.closeDialog()

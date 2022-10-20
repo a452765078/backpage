@@ -16,6 +16,7 @@
 import Menu from '../components/Menu.vue';
 import Nav from '../components/Nav.vue';
 import api from '../api/api';
+import store from '../storage/store'
 export  default {
     name:'home',
     components: {
@@ -34,6 +35,7 @@ export  default {
         getPermissionList() {
             api.getPermissionList({}).then(res=>{
                 this.menuList = res.menuList;
+                this.$store.dispatch("getActionList",res.actionList)
                 console.log(res)
             }).catch((err) => {
                 console.log(err)

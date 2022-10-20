@@ -32,8 +32,8 @@
         <div class="tableOperate">
             <div class="box">
                 <div class="top">
-                    <el-button type="danger" @click="delUsers('patch')">批量删除</el-button>
-                    <el-button type="primary" @click="openDialog('add')">新增</el-button>
+                    <el-button type="danger" @click="delUsers('patch')" v-has="'user-patch-delete'">批量删除</el-button>
+                    <el-button type="primary" @click="openDialog('add')" v-has="'user-create'">新增</el-button>
                 </div>
                 <div class="inner">
                     <el-table :data="tableData" @selection-change="select(sel,row)" ref="tableDom">
@@ -41,13 +41,13 @@
                         <el-table-column v-for="(column,index) in userInfoList" :label="column.label"  :prop="column.prop" :key="index" :formatter="column.formatter"></el-table-column>
                         <el-table-column label="操作">
                             <template #default="scope">
-                                <el-button size="small" @click="openDialog('edit',scope.row)"
+                                <el-button size="small" @click="openDialog('edit',scope.row)" v-has="'user-edit'"
                                 >编辑</el-button
                                 >
                                 <el-button
                                 size="small"
                                 type="danger"
-                                @click="delUsers('single',scope.row.userId)"
+                                @click="delUsers('single',scope.row.userId)" v-has="'user-delete'"
                                 >删除</el-button
                                 >
                             </template>
@@ -61,8 +61,7 @@
         <el-dialog
             v-model="dialogVisible"
             title="用户操作"
-            width="40%"
-            :before-close="handleClose">
+            width="40%">
             <el-form :inline="false" :model="userModel" ref="userModel" label-width="100px" :rules="rules">
                         <el-form-item label="用户名" prop="userName">
                             <el-input v-model="userModel.userName"></el-input>
