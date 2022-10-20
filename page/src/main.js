@@ -33,10 +33,14 @@ app.directive('has', {
     // },
 
     mounted: function (el, bind, vnode) {
-        let actionList = bind.instance.$store.state.actionList
+        // let actionList = bind.instance.$store.state.actionList
+        let actionList = store.state.actionList
         let action = bind.value
         let isHas = actionList.includes(action)
-        if (!isHas) el.parentNode.removeChild(el)
+        if (!isHas) {
+            el.style.display = "none"
+            el.parentNode.removeChild(el)
+        }
     }
 })
 
