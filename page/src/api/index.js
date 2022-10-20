@@ -1,6 +1,8 @@
+import { WindPower } from '@element-plus/icons-vue'
 import axios from 'axios'
 import config from '../config/index'
 import storage from '../storage/index'
+import router from '../router/index'
 
 axios.interceptors.request.use(function (config) {
     // console.log("config", config)
@@ -15,6 +17,11 @@ axios.interceptors.response.use(function (response) {
     let data = response.data
     if (data.code === 200) {
         return data.data;
+    } else if (data.code === 40001) {
+        console.log("token已过期需要进行登录", data)
+        alert("TOKEN已过期，请登录")
+        // window.location.href = '/login'   //不可行，不停重复跳转
+        router.push("/login")
     } else {
         //TODO
     }

@@ -36,7 +36,7 @@
                                 <el-button
                                 size="small"
                                 type="danger"
-                                @click="delMenu('single',scope.row._id)"
+                                @click="openDialogConfirm(scope.row._id)"
                                 >删除</el-button
                                 >
                             </template>
@@ -50,8 +50,7 @@
         <el-dialog
             v-model="dialogVisible"
             title="用户操作"
-            width="40%"
-            :before-close="handleClose">
+            width="40%">
             <el-form :inline="false" :model="menuModel" ref="menuModel" label-width="100px" :rules="rules">
                 <el-form-item label="父级菜单" prop="parentId">
                     <el-cascader :options="tableData" :props="{
@@ -61,27 +60,32 @@
                     />
                 </el-form-item>
                 <el-form-item label="菜单类型" prop="menuType">
-                    <el-radio-group v-model="menuModel.menuType" class="ml-4" size="'small">
-                        <el-radio label="1" size="large">菜单</el-radio>
-                        <el-radio label="2" size="large">按钮</el-radio>
-                      </el-radio-group>
+                    <el-radio-group v-model="menuModel.menuType" class="ml-4" size="small">
+                        <el-radio :label="1" size="large">菜单</el-radio>
+                        <el-radio :label="2" size="large">按钮</el-radio>
+                    </el-radio-group>
+                      <!-- 此处为何要 : 才能正常赋值？ -->
                 </el-form-item>
-                <el-form-item label="菜单名称" prop="menuName" v-if="menuModel.menuType==1">
+                <el-form-item label="菜单名称" prop="menuName" >
                     <el-input v-model="menuModel.menuName"></el-input>
                 </el-form-item>
                 <el-form-item label="菜单图标" prop="icon" v-if="menuModel.menuType==1">
                     <el-input v-model="menuModel.icon"></el-input>
                 </el-form-item>
-                <el-form-item label="路由地址" prop="path">
+                <el-form-item label="路由路径" prop="path" v-if="menuModel.menuType==1">
                     <el-input v-model="menuModel.path"></el-input>
                 </el-form-item>
-                <el-form-item label="组件地址" prop="component">
+                <el-form-item label="组件名称" prop="component" v-if="menuModel.menuType==1">
                     <el-input v-model="menuModel.component"></el-input>
                 </el-form-item>
+                <el-form-item label="权限标识" prop="menuCode" v-if="menuModel.menuType==2">
+                    <el-input v-model="menuModel.menuCode"></el-input>
+                </el-form-item>
+                
                 <el-form-item label="菜单状态" prop="menuState">
-                    <el-radio-group v-model="menuModel.menuState" size="'small">
-                        <el-radio label="1" size="large">菜单</el-radio>
-                        <el-radio label="2" size="large">按钮</el-radio>
+                    <el-radio-group v-model="menuModel.menuState" size="small">
+                        <el-radio :label="1" size="large">可用</el-radio>
+                        <el-radio :label="2" size="large">不可用</el-radio>
                       </el-radio-group>
                 </el-form-item>
             </el-form>
@@ -93,13 +97,32 @@
                     </template>
         </el-dialog>
   <!-- end -->
+        <el-dialog
+            v-model="isConfirm"
+            title="Tips"
+            width="30%"
+            :before-close="handleClose"
+        >
+            <span>确认是否删除</span>
+            <template #footer>
+            <span class="dialog-footer">
+                <el-button @click="delMenu('cancel')">取消</el-button>
+                <el-button type="danger" @click="delMenu('confirm')"
+                >确认</el-button
+                >
+            </span>
+            </template>
+        </el-dialog>
     </div>
 </template>
 <script>
 import pagerContent from '../utils/pager'
 import api from '../api/api'
 export default {
-    name: 'users',
+    name: 'menus',
+    components: {
+
+    },
     data() {
         return {
             menuForm: {
@@ -134,7 +157,7 @@ export default {
                 },
                 {
                     prop:'component',
-                    label:'组件路径'
+                    label:'组件名称'
                 },
                 {
                     prop:'menuState',
@@ -151,33 +174,30 @@ export default {
             menuModel: {
                 _id:'',
                 menuName: '',
-                menuType:'',
+                menuType: '1',
                 menuCode:'',
                 path:'',
                 icon:'',
                 component:'',
+                menuState: '1',
                 parentId:[null]
             },
             rules: {
                 menuName:[
-                    {required:true,message:'请输入账号',trigger:'blur'}
+                    {required:true,message:'请输入菜单姓名',trigger:'blur'}
                 ],
                 menuType: [
-                    {required:true,message:'请输入邮箱',trigger:'blur'}
+                    {required:true,message:'请输入菜单类型',trigger:'blur'}
                 ],
                 menuCode: [
-                    {required:true,message:'请输入手机号',trigger:'blur'}
+                    {required:true,message:'请输入菜单标识',trigger:'blur'}
                 ],
                 path: [
-                    {required:true,message:'请输入岗位',trigger:'blur'}
+                    {required:true,message:'请输入路径',trigger:'blur'}
                 ],
-                icon: [
-                    {required:true,message:'请输入在职状态',trigger:'blur'}
-                ],
-                component: [
-                    {required:true,message:'请选择角色',trigger:'blur'}
-                ],
-            }
+            },
+            isConfirm: false ,//是否显示弹框,
+            curOperateId: '',//当前正在删除的id
         }
     },
     mounted() {
@@ -196,18 +216,40 @@ export default {
         formReset(val) {
             this.$refs[val].resetFields()
         },
-        async delMenu(type,val) {
-            this.action = 'delete'
-            const res = await api.operateMenu({
-                _id:val,
-                action:this.action
-            })
+        async delMenu(type) {
+            if(type == 'cancel') {
+                this.isConfirm = false
+                return
+            }else if(type == 'confirm') {
+                this.action = 'delete'
+                try {
+                    const res = await api.operateMenu({
+                        _id:this.curOperateId,
+                        action:this.action
+                    })
+                    this.getMenuList()
+                    this.isConfirm = false
+                } catch (error) {
+                    alert("删除失败",error)
+                }
+            }
         },
         openDialog(action,row) {
             this.action = action
             this.dialogVisible = true
             if(action == 'edit') {
-                this.menuModel = row
+                this.$nextTick(()=>{
+                    console.log(this.$refs)
+                    // this.$refs['menuModel'].resetFields()
+                    this.menuModel = JSON.parse(JSON.stringify(row))
+                })
+            }else if( action == 'create') {
+                // console.log("this.$refs",this.$refs)
+                this.$nextTick(()=>{
+                    this.$refs['menuModel'].resetFields()
+                    this.menuModel = {}
+                })
+                // 使用nextTick 能够解决刷新后打开页面时获取不到dom的问题。
             }
         },
         closeDialog() {
@@ -217,24 +259,32 @@ export default {
         },
         dialogSubmit() {
             this.$refs['menuModel'].validate( async (valid) => {
-                console.log(valid)
                 if(valid) {
+                    debugger
+                    let {_id,parentId,menuType,menuName,menuCode,menuState,path,component} = this.menuModel
+                    parentId = parentId ? parentId : [null]
                     let params = {
-                        ...this.menuModel,
+                        _id,parentId,menuType,menuName,menuCode,menuState,path,component,
                         action:this.action
                     }
-                    const res = await api.operateMenu(params)
-                    if(res) {
+                    try {
+                        const res = await api.operateMenu(params)
                         alert("操作成功")
                         this.closeDialog()
-                    }else {
-                        alert("操作失败")
+                        this.getMenuList()
+                    } catch (error) {
+                        alert("操作失败",error)
                     }
+
                 }
             })
         },
         dialogCancel() {
             this.closeDialog()
+        },
+        openDialogConfirm(val) {
+            this.isConfirm = true;
+            this.curOperateId = val
         }
     }
 }

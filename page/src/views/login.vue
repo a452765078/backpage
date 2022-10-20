@@ -15,6 +15,7 @@
 import { ElForm,ElFormItem,ElInput,ElButton} from 'element-plus';
 import storage from '../storage/index';
 import Api from '../api/api'
+
 export  default {
     name:'login',
     components: { 
@@ -35,7 +36,8 @@ export  default {
                 userPwd:[
                     {required:true,message:'请输入密码',trigger:'blur'}
                 ]
-            }
+            },
+
         }
     },
     methods: {
@@ -48,8 +50,8 @@ export  default {
                         userName:this.form.userName,
                         userPwd:this.form.userPwd
                     }).then((res)=>{
-                        debugger
                         storage.setAllStorage(res)
+                        this.$store.dispatch("login",res.userName)
                         this.$router.push({
                             path:"/home"
                         })
@@ -58,7 +60,8 @@ export  default {
                     })
                 }
             })
-        }
+        },
+
     }
 }
 </script>

@@ -47,6 +47,20 @@ function transDate(format, date) {
     return format;
 }
 
+// 格式必须是 2021-12-26T16:00:00.000Z
+function strToDate(str) {
+    var year = parseInt(str.substr(0, 4))
+    var month = parseInt(str.substr(6, 2))
+    var day = parseInt(str.substr(9, 2))
+    var h = parseInt(str.substr(11, 2))
+    var m = parseInt(str.substr(14, 2))
+    var s = parseInt(str.substr(17, 2))
+    // return new Date(year,month,day,h,m,s)
+    return `${year}年${month}月${day}日`
+}
+
+
 export default {
-    transDate
+    transDate,
+    strToDate
 }

@@ -80,8 +80,9 @@
             </el-form>
             <template #footer>
                 <span class="dialog-footer">
-                    <el-button @click="dialogSubmit('审核通过')">通过</el-button>
-                    <el-button type="primary" @click="dialogSubmit('审核拒绝')">驳回</el-button>
+                    <!--  -->
+                    <el-button @click="dialogSubmit('pass')">通过</el-button>
+                    <el-button type="primary" @click="dialogSubmit('refuse')">驳回</el-button>
                 </span>
             </template>
         </el-dialog>
@@ -227,8 +228,9 @@ export default {
     },
     methods: {
         async getLeavesList() {
-            
+            let applyState = this.leaveForm.applyState?this.leaveForm.applyState:'1'
             let params = {...this.leaveForm,
+                applyState,
                 pageNum:this.curPage,
                 pageSize:this.pager.pageSize
             }
@@ -279,17 +281,22 @@ export default {
                 // console.log(valid)
                 if(valid) {
                     let params = {
-                        _id:this.leaveModel.orderNo,
-                        remark:this.leaveModel.remark,
+                        ...this.leaveModel,
                         action:action
                     }
-                    const res = await api.operateApprove(params)
-                    if(res) {
+                    try {
+                        const res = await api.operateApprove(params)
                         alert("操作成功")
                         this.closeDialogProcess()
-                    }else {
-                        alert("操作失败")
+                        this.getLeavesList()
+
+                        //以下为更新消息数量
+                        let count = await api.getLeaveCount({})
+                        this.$store.dispatch("getCount",count)
+                    } catch (error) {
+                        alert(`操作失败，${error}`)
                     }
+
                 }
             })
         }

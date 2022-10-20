@@ -1,7 +1,7 @@
 import config from '../config/index'
 
 function getAllStorage() {
-    let storageData = localStorage.getItem(config.storageName)
+    let storageData = localStorage.getItem(config.storageName) ? localStorage.getItem(config.storageName) : '{}'
     storageData = storageData == 'undefined' ? {} : JSON.parse(storageData)
     return storageData
 }
@@ -17,6 +17,7 @@ function setItem(name, val) {
 }
 function getItem(name) {
     let storageData = getAllStorage()
+    let result = storageData[name] === 'undefined' ? '' : storageData[name]
     return storageData[name]
 }
 

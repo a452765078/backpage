@@ -18,6 +18,9 @@
                                 :label="item.label"
                                 :value="item.value"
                                 />
+                                <!-- <el-option label="在职" :value="1"/>
+                                <el-option label="离职" :value="2"/>
+                                <el-option label="试用期" :value="3"/> -->
                             </el-select>
                         </el-form-item>
                         <el-button type="primary" @click="getUsersList">查询</el-button>
@@ -30,12 +33,12 @@
             <div class="box">
                 <div class="top">
                     <el-button type="danger" @click="delUsers('patch')">批量删除</el-button>
-                    <el-button type="primary" @click="openDialog('create')">新增</el-button>
+                    <el-button type="primary" @click="openDialog('add')">新增</el-button>
                 </div>
                 <div class="inner">
                     <el-table :data="tableData" @selection-change="select(sel,row)" ref="tableDom">
                         <el-table-column type="selection" width="55" />
-                        <el-table-column v-for="(column,index) in userInfoList" :label="column.label"  :prop="column.prop" :key="index"></el-table-column>
+                        <el-table-column v-for="(column,index) in userInfoList" :label="column.label"  :prop="column.prop" :key="index" :formatter="column.formatter"></el-table-column>
                         <el-table-column label="操作">
                             <template #default="scope">
                                 <el-button size="small" @click="openDialog('edit',scope.row)"
@@ -66,7 +69,6 @@
                         </el-form-item>
                         <el-form-item label="邮箱" prop="userEmail">
                             <el-input v-model="userModel.userEmail">
-                                <template #append>@168.com</template>
                             </el-input>
                         </el-form-item>
                         <el-form-item label="手机号" prop="mobile">
@@ -77,12 +79,15 @@
                         </el-form-item>
                         <el-form-item label="在职状态" prop="state">
                             <el-select v-model="userModel.state" class="m-2" placeholder="Select">
-                                <el-option
+                                <!-- <el-option
                                 v-for="item in stateOptions"
                                 :key="item.value"
                                 :label="item.label"
                                 :value="item.value"
-                                />
+                                /> -->
+                                <el-option label="在职" :value="1"/>
+                                <el-option label="离职" :value="2"/>
+                                <el-option label="试用期" :value="3"/>
                             </el-select>
                         </el-form-item>
                         <el-form-item label="系统角色" prop="roleList">
@@ -122,6 +127,7 @@
 <script>
 import pagerContent from '../utils/pager'
 import api from '../api/api'
+import formValidate from '../utils/formValidate'
 export default {
     name: 'users',
     data() {
@@ -135,7 +141,7 @@ export default {
                 {
                     label:'所有',
                     value: 0
-                },
+                },  
                 {
                     label:'在职',
                     value: 1
@@ -169,7 +175,15 @@ export default {
                 },
                 {
                     prop:'roleList',
-                    label:'角色列表'
+                    label:'角色列表',
+                    formatter: (val) => {
+                        let _idList = val.roleList
+                        _idList = Object.values(_idList)
+                        let roleNameList = _idList.map(_id => {
+                            return this.roleKeyValue[_id]
+                        })
+                        return roleNameList.join(",")
+                    }
                 },
                 {
                     prop:'state',
@@ -203,10 +217,12 @@ export default {
                     {required:true,message:'请输入账号',trigger:'blur'}
                 ],
                 userEmail: [
-                    {required:true,message:'请输入邮箱',trigger:'blur'}
+                    {required:true,message:'请输入邮箱',trigger:'blur'},
+                    {validator:formValidate.validateEmail, trigger: 'blur' }
                 ],
                 mobile: [
-                    {required:true,message:'请输入手机号',trigger:'blur'}
+                    {required:true,message:'请输入手机号',trigger:'blur'},
+                    {validator:formValidate.validatePhone, trigger: 'blur' }
                 ],
                 job: [
                     {required:true,message:'请输入岗位',trigger:'blur'}
@@ -215,12 +231,14 @@ export default {
                     {required:true,message:'请输入在职状态',trigger:'blur'}
                 ],
                 roleList: [
-                    {required:true,message:'请选择角色',trigger:'blur'}
+                    {type:'array',required:true,message:'请至少选择一个角色',trigger:'change'}
                 ],
                 deptId: [
                     {required:true,message:'请选择部门',trigger:'blur'}
                 ]
-            }
+            },
+            roleList:[],
+            roleKeyValue:{} //用于通过角色_id 映射为角色名称
         }
     },
     mounted() {
@@ -273,22 +291,48 @@ export default {
                 alert("删除失败")
             }
         },
+        /**
+         * 
+         * @param {*} action 
+         * @param {*} row 
+         * @desc 打开弹框前都要重置表单在进行赋值。
+         *  目前碰到的一个疑问是为啥不需要使用$nextTicks就能够赋值成功，并且在add操作时能够清空数据
+         */
         openDialog(action,row) {
             this.action = action
             this.dialogVisible = true
             if(action == 'edit') {
-                this.userModel = row
+                this.$nextTick(()=>{
+                    this.$refs['userModel'].resetFields()
+                    this.userModel = JSON.parse(JSON.stringify(row))
+                })
+                // 不适用nextTick时，刷新完页面后点击编辑会出现看不到数据的情况
+                // this.$refs['userModel'].resetFields()
+                // this.userModel = JSON.parse(JSON.stringify(row))
+            }else if(action =='add') {
+                this.userModel = {}
+                this.$refs['userModel'].resetFields()
             }
         },
         closeDialog() {
             this.action = ''
             this.dialogVisible = false
-            this.userModel = {}
+            // this.userModel = {}
+            // this.$refs['userModel'].resetFields()
         },
         async getRolesList() {
             const res = await api.getRolesList({})
             this.roleList = res
+            this.formaterRoleToKey()
+
         },
+        formaterRoleToKey() {
+            let roleKeyValue = {}
+            this.roleList.map( item => {
+                roleKeyValue[item._id] = item.roleName
+            })
+            this.roleKeyValue = roleKeyValue
+        },  
         async getDeptList() {
             const res = await api.getDeptList({})
             this.deptList = res
@@ -301,13 +345,20 @@ export default {
                         ...this.userModel,
                         action:this.action
                     }
-                    const res = await api.operateUsers(params)
-                    if(res) {
-                        alert("操作成功")
-                        this.closeDialog()
-                    }else {
-                        alert("操作失败")
+                    try {
+                        const res = await api.operateUsers(params)
+                        if(res) {
+                            alert("操作成功")
+                            this.closeDialog()
+                            this.getUsersList()
+                        }else {
+                            alert("操作失败")
+                        }
+                    } catch (error) {
+                       alert("操作失败") 
                     }
+
+
                 }
             })
         },

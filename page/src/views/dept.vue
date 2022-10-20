@@ -33,7 +33,7 @@
                                 <el-button
                                 size="small"
                                 type="danger"
-                                @click="delDept('single',scope.row._id)"
+                                @click="openDelDialog(scope.row._id)"
                                 >删除</el-button
                                 >
                             </template>
@@ -83,6 +83,21 @@
                     </template>
         </el-dialog>
   <!-- end -->
+        <el-dialog
+            v-model="isConfirm"
+            title="Tips"
+            width="30%"
+            >
+            <span>确认是否删除</span>
+            <template #footer>
+            <span class="dialog-footer">
+                <el-button @click="delDept('cancel')">取消</el-button>
+                <el-button type="primary" @click="delDept('confirm')"
+                >确认</el-button
+                >
+            </span>
+            </template>
+        </el-dialog>
     </div>
 </template>
 <script>
@@ -134,7 +149,10 @@ export default {
                 icon:'',
                 component:'',
                 parentId:[null],
-                userInfo:''
+                userInfo:'',
+                userId:'',
+                userName:'',
+                userEmail:''
             },
             rules: {
                 deptName:[
@@ -147,7 +165,9 @@ export default {
                     {required:true,message:'请输入邮箱',trigger:'blur'}
                 ],
             },
-            userNameOptions:[]
+            userNameOptions:[],
+            curId: ''  , // 用户执行删除操作,
+            isConfirm: false
         }
     },
     mounted() {
@@ -161,19 +181,19 @@ export default {
                 pageNum:this.curPage,
                 pageSize:this.pager.pageSize
             }
-            const res = await api.getUsersList(params)
-            this.userNameOptions = res.list
+            const res = await api.getAllUserList(params)
+            this.userNameOptions = res
             this.formatUser()
         },
         formatUser() {
             this.userNameOptions.map((item) => {
-                item.userInfo = `${item.userName}/${item.userEmail}`
+                item.userInfo = `${item.userName}/${item.userEmail}/${item.userId}`
             })
         }, 
         userNameChange() {
-            console.log(this.deptModel.userInfo)
             this.deptModel.userName =  this.deptModel.userInfo.split("/")[0]
             this.deptModel.userEmail = this.deptModel.userInfo.split("/")[1]
+            this.deptModel.userId = this.deptModel.userInfo.split("/")[2]
         },  
         async getDeptList() {
             
@@ -187,22 +207,43 @@ export default {
         formReset(val) {
             this.$refs[val].resetFields()
         },
-        async delDept(type,val) {
-            this.action = 'delete'
-            const res = await api.operateDept({
-                _id:val,
-                action:this.action
-            })
+        openDelDialog(id) {
+            this.curId = id;
+            this.isConfirm = true
+        },
+        async delDept(type) {
+            if(type == 'cancel') {
+                this.isConfirm = false
+                return
+            }else if(type == 'confirm') {
+                this.action = 'delete'
+                try {
+                    const res = await api.operateDept({
+                        _id:this.curId,
+                        action:this.action
+                    })
+                    this.isConfirm = false
+                    this.getDeptList()
+                    alert("删除成功")
+                } catch (error) {
+                    alert("删除失败,",error)
+                }
+            }
         },
         openDialog(action,row) {
             this.action = action
             this.dialogVisible = true
             if(action == 'edit') {
-                console.log("row =>",row)
-                this.deptModel = row
-                this.deptModel.userInfo = `${row.userName}/${row.userEmail}`
-                this.deptModel.userName =  this.deptModel.userInfo.split("/")[0]
-                this.deptModel.userEmail = this.deptModel.userInfo.split("/")[1]
+                this.$nextTick(()=>{
+                    this.$refs['deptModel'].resetFields()
+                    this.deptModel = JSON.parse(JSON.stringify(row))
+                    this.deptModel.userInfo = `${row.userName}/${row.userEmail}/${row.userId}`
+                })
+            }else if(action == 'create') {
+                this.$nextTick(()=>{
+                    this.$refs['deptModel'].resetFields()
+                    this.deptModel = {}
+                })
             }
         },
         closeDialog() {
@@ -212,16 +253,19 @@ export default {
         },
         dialogSubmit() {
             this.$refs['deptModel'].validate( async (valid) => {
-                console.log(valid)
                 if(valid) {
+                    let {_id,parentId,deptName,userId,userName,userEmail} = this.deptModel
+                    parentId = parentId ? parentId : [null]
                     let params = {
-                        ...this.deptModel,
-                        action:this.action
+                        action:this.action,
+                        _id,
+                        parentId,deptName,userId,userName,userEmail
                     }
                     const res = await api.operateDept(params)
                     if(res) {
                         alert("操作成功")
                         this.closeDialog()
+                        this.getDeptList()
                     }else {
                         alert("操作失败")
                     }

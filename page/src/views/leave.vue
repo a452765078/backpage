@@ -132,7 +132,7 @@
 <script>
 import pagerContent from '../utils/pager'
 import api from '../api/api'
-import dataFormat from '../utils/dateFormat'
+import dateFormat from '../utils/dateFormat'
 export default {
     name: 'users',
     data() {
@@ -177,13 +177,15 @@ export default {
                     prop:'startTime',
                     label:'开始时间',
                     // formatter: (val)=>{
-                    //     console.log(typeof val.startTime)
-                    //     return dataFormat.transDate('YYYY-MM-DD',val.startTime)
+                    //     return dateFormat.strToDate(val.startTime)
                     // }
                 },
                 {
                     prop:'endTime',
-                    label:'结束时间'
+                    label:'结束时间',
+                    // formatter: (val)=>{
+                    //     return dateFormat.strToDate(val.endTime)
+                    // }
                 },
                 {
                     prop:'reasons',
@@ -191,7 +193,10 @@ export default {
                 },
                 {
                     prop:'createTime',
-                    label:'创建时间'
+                    label:'创建时间',
+                    // formatter: (val)=>{
+                    //     return dateFormat.strToDate(val.startTime)
+                    // }
                 },
                 {
                     prop:'auditUsers',
@@ -251,12 +256,16 @@ export default {
     },
     methods: {
         async getLeavesList() {
-            
             let params = {...this.leaveForm,
                 pageNum:this.curPage,
                 pageSize:this.pager.pageSize
             }
             const res = await api.getLeaveList(params)
+            res.list.map(item => {
+                item.startTime = dateFormat.strToDate(item.startTime)
+                item.endTime = dateFormat.strToDate(item.endTime)
+                item.createTime = item.createTime ? dateFormat.strToDate(item.createTime):null
+            })
             this.tableData = res.list
             this.pager = res.page
         },
@@ -274,14 +283,21 @@ export default {
             }
         },
         // 请假申请-日期改变时
-        dateUpdate() {
+        dateUpdate(val) {
+            let curDate = new Date()
+            let startTime = this.leaveModel.startAndEndTime[0]
+            let endTime = this.leaveModel.startAndEndTime[1]
+            if(val[0]<curDate) {
+                alert("请假时间必须大于或等于当前时间")
+                this.leaveModel.startAndEndTime = []
+                return
+            }
             this.leaveModel.startTime = this.leaveModel.startAndEndTime[0]
             this.leaveModel.endTime = this.leaveModel.startAndEndTime[1]
             let day = Math.ceil((this.leaveModel.endTime - this.leaveModel.startTime)/1000/60/60/24) +1
             this.leaveModel.leaveTime = `${day} 天`
-            console.log(dataFormat.transDate('YYYY-MM-DD',this.leaveModel.startTime))
+            console.log(dateFormat.transDate('YYYY-MM-DD',this.leaveModel.startTime))
 
-            console.log()
 
         },
         delUsers(type,val) {
@@ -309,16 +325,25 @@ export default {
             this.action = action
             this.dialogVisibleProcess = true
             if(action == 'edit') {
-                this.leaveModel = row
+                this.$nextTick(()=>{
+                    this.leaveModel = JSON.parse(JSON.stringify(row))
+                })
+
             }
         },
         closeDialogProcess() {
             this.action = ''
             this.dialogVisibleProcess = false
         },
+        //打开请假申请对话框
         openDialog(action,row) {
             this.action = action
             this.dialogVisible = true
+            this.$nextTick(()=>{
+                this.leaveModel = {}
+                this.$refs['leaveModel'].resetFields()
+            })
+
         },
         closeDialog() {
             this.action = ''
@@ -341,13 +366,15 @@ export default {
                         ...this.leaveModel,
                         action:this.action
                     }
-                    const res = await api.operateLeave(params)
-                    if(res) {
-                        alert("操作成功")
+                    try {
+                        const res = await api.operateLeave(params)
+                        this.getLeavesList()
                         this.closeDialog()
-                    }else {
-                        alert("操作失败")
+                        alert("操作成功")   
+                    } catch (error) {
+                        alert(`操作失败，${error}`)
                     }
+
                 }
             })
         },

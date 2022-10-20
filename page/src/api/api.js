@@ -115,7 +115,7 @@ function getMenuList(para) {
 function operateMenu(para) {
     let params = {}
     let method = 'POST'
-    params.url = '/menu/operate'
+    params.url = '/roles/operate'
     params.method = method
     if (method === 'POST') {
         params.data = para
@@ -223,6 +223,34 @@ function operateApprove(para) {
     return axios({ ...params })
 }
 
+function getAllUserList(para) {
+    let params = {}
+    let method = 'GET'
+    params.url = '/users/all/list'
+    params.method = method
+    if (method === 'POST') {
+        params.data = para
+    } else {
+        params.params = para
+    }
+
+    return axios({ ...params })
+}
+
+function getLeaveCount(para) {
+    let params = {}
+    let method = 'GET'
+    params.url = '/leave/count'
+    params.method = method
+    if (method === 'POST') {
+        params.data = para
+    } else {
+        params.params = para
+    }
+
+    return axios({ ...params })
+}
+
 export default {
     login,
     getPermissionList,
@@ -239,5 +267,7 @@ export default {
     operateDept,
     getLeaveList,
     operateLeave,
-    operateApprove
+    operateApprove,
+    getAllUserList,
+    getLeaveCount
 }
